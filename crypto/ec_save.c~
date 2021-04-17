@@ -1,0 +1,45 @@
+#include "hblk_crypto.h"
+
+/**
+ * ec_save - a function that saves an existing EC key pair
+ * @key: is the sequence of bytes to be hashed
+ * @folder:  is the number of bytes to hash in
+ * Return: int a number 1 or 0 on failure
+*/
+int ec_save(EC_KEY *key, char const *folder)
+{
+char FL[512] = {0};
+FILE *F;
+struct stat st = {0};
+
+if (!key || !folder)
+return (0);
+
+if (stat(folder, &st) == -1)
+{
+if (mkdir(folder, 0700) == -1)
+return (0);
+}
+
+sprintf(FL, "%s/%s", folder, "key_pub.pem");
+F = fopen(FL, "w");
+
+if (!F)
+return (0);
+
+if (!PEM_write_ECPrivateKey(F, key, NULL, NULL, 0, NULL, NULL))
+return (0);
+
+fclose(F);
+sprintf(FL, "%s/%s", folder, "key_pub.pem");
+F = fopen(FL, "w");
+
+if (!F)
+return (0);
+
+if (!PEM_write_EC_PUBKEY(F, key))
+return (0);
+
+fclose(F);
+return (1);
+}
