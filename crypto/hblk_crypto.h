@@ -1,3 +1,6 @@
+#ifndef HBLK_CRYPTO_H
+#define HBLK_CRYPTO_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,18 +15,25 @@
 #include <openssl/sha.h>
 
 #define CURVE_Type NID_secp256k1
-#define EC_PUB_LEN 65
 
+#define EC_PUB_LEN 65
 
 # define SIG_MAX_LEN 72
 
+/**
+ * struct sig_s - EC Signature structure
+ *
+ * @sig: is signature buffer
+ * @len: is actual signature size
+*/
 typedef struct sig_s
 {
- uint8_t sig[SIG_MAX_LEN];
- uint8_t len;
+uint8_t sig[SIG_MAX_LEN];
+uint8_t len;
 } sig_t;
 
-uint8_t *sha256(int8_t const *s, size_t len, uint8_t digest[SHA256_DIGEST_LENGTH]);
+uint8_t *sha256(int8_t const *s, size_t len,
+uint8_t digest[SHA256_DIGEST_LENGTH]);
 
 EC_KEY *ec_create(void);
 
@@ -35,6 +45,9 @@ int ec_save(EC_KEY *key, char const *folder);
 
 EC_KEY *ec_load(char const *folder);
 
-uint8_t *ec_sign(EC_KEY const *key, uint8_t const *msg, size_t msglen, sig_t *sig);
+uint8_t *ec_sign(EC_KEY const *key, uint8_t const *msg,
+size_t msglen, sig_t *sig);
 
-int ec_verify(EC_KEY const *key, uint8_t const *msg, size_t msglen, sig_t const *sig);
+int ec_verify(EC_KEY const *key, uint8_t const *msg, size_t msglen,
+sig_t const *sig);
+#endif
