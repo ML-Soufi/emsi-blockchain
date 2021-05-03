@@ -14,12 +14,12 @@ EC_GROUP *group;
 if (!pub)
 return (NULL);
 
-ec_key = EC_KEY_new_by_curve_name(CURVE_Type);
+ec_key = EC_KEY_new_by_curve_name(EC_CURVE);
 
 if (!ec_key)
 return (NULL);
 
-group = EC_GROUP_new_by_curve_name(CURVE_Type);
+group = EC_GROUP_new_by_curve_name(EC_CURVE);
 
 if (!group)
 return (NULL);
