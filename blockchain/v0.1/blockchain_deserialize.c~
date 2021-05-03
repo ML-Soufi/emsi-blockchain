@@ -59,32 +59,33 @@ return (0);
 */
 blockchain_t *blockchain_deserialize(char const *path)
 {
-	FILE *fp;
-	hblk_file_t header;
-	blockchain_t *blockchain;
-	int size;
-	uint8_t swap_endian;
+FILE *fp;
+hblk_file_t header;
+blockchain_t *blockchain;
+int size;
+uint8_t swap_endian;
 
-	if (!path)
-		return (NULL);
-	if (access(path, R_OK) == -1)
-		return (NULL);
-	fp = fopen(path, "r");
-	if (!fp)
-		return (NULL);
-	fread(&header, sizeof(header), 1, fp);
-	if (memcmp(header.hblk_magic, "HBLK", 4) ||
-		memcmp(header.hblk_version, "0.1", 3))
-		return (fclose(fp), NULL);
-	blockchain = blockchain_create();
-	if (!blockchain)
-		return (fclose(fp), NULL);
-	swap_endian = _get_endianness() != header.hblk_endian;
-	size = header.hblk_blocks;
-	if (swap_endian)
-		_swap_endian(&size, sizeof(size));
-	if (read_blocks(fp, swap_endian, blockchain, size) == -1)
-		return (blockchain_destroy(blockchain), fclose(fp), NULL);
-	fclose(fp);
-	return (blockchain);
+if (!path)
+	return (NULL);
+if (access(path, R_OK) == -1)
+	return (NULL);
+fp = fopen(path, "r");
+if (!fp)
+	return (NULL);
+fread(&header, sizeof(header), 1, fp);
+if (memcmp(header.hblk_magic, "HBLK", 4) ||
+memcmp(header.hblk_version, "0.1", 3))
+	return (fclose(fp), NULL);
+blockchain = blockchain_create();
+if (!blockchain)
+	return (fclose(fp), NULL);
+swap_endian = _get_endianness() != header.hblk_endian;
+size = header.hblk_blocks;
+if (swap_endian)
+	_swap_endian(&size, sizeof(size));
+if (read_blocks(fp, swap_endian, blockchain, size) == -1)
+	return (blockchain_destroy(blockchain), fclose(fp), NULL);
+fclose(fp);
+
+return (blockchain);
 }

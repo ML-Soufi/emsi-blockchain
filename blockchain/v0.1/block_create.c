@@ -28,7 +28,8 @@ if (data_len <= BLOCKCHAIN_DATA_MAX)
 {
 memcpy(&(new_blk->data.buffer), data, data_len);
 new_blk->data.len = data_len;
-} else
+} 
+else
 {
 memcpy(&(new_blk->data.buffer), data, BLOCKCHAIN_DATA_MAX);
 new_blk->data.len = BLOCKCHAIN_DATA_MAX;

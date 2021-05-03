@@ -1,64 +1,50 @@
 #include "blockchain.h"
 
 /**
-* write_block - function which writes a single block into @arg
-* @ptr: pointer to a block
-* @idx: index of a block
-* @arg: file pointer
-* Return: 0 or -1 if failed
-*/
-int write_block(llist_node_t ptr, unsigned int idx, void *arg)
-{
-FILE *file;
-block_t *block = ptr;
-
-UNUSED(idx);
-if (!arg || !ptr)
-return (-1);
-
-file = (FILE *)arg;
-fwrite((void *)&block->info, sizeof(block->info), 1, file);
-fwrite((void *)&block->data.len, sizeof(block->data.len), 1, file);
-fwrite(block->data.buffer, block->data.len, 1, file);
-fwrite(block->hash, sizeof(block->hash), 1, file);
-
-return (0);
-}
-
-/**
-* blockchain_serialize - function which writes a blockchain into a file
-* @blockchain: blockchain to be serialized
-* @path: path to the a file
-* Return: 0 if successful, -1 if failed
-*/
+ * blockchain_serialize - function serializes a Blockchain into a file
+ * @blockchain: pointer to blockchain to be serialized
+ * @path: the path to a file
+ *
+ * Return: 0 upon success, -1 upon failure
+ */
 int blockchain_serialize(blockchain_t const *blockchain, char const *path)
 {
-hblk_file_t header;
-FILE *file;
+	int file, i, length;
+	uint8_t endianness = _get_endianness();
 
-if (!blockchain || !path)
-return (-1);
+	if (!blockchain || !blockchain->chain || !path)
+		return (-1);
+	length = llist_size(blockchain->chain);
+	file = open(path, O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR);
+	if (file == -1)
+		return (-1);
+	if (write(file, HBLK_MAGIC, strlen(HBLK_MAGIC))
+		 != strlen(HBLK_MAGIC))
+		return (close(file), -1);
+	if (write(file, HBLK_VERSION, strlen(HBLK_VERSION))
+		!= strlen(HBLK_VERSION))
+		return (close(file), -1);
+	if (write(file, &endianness, 1) != 1)
+		return (close(file), -1);
+	if (write(file, &length, 4) != 4)
+		return (close(file), -1);
+	for (i = 0; i < length; i++)
+	{
+		block_t *block = llist_get_node_at(blockchain->chain, i);
 
-memcpy(header.hblk_magic, "HBLK", 4);
-memcpy(header.hblk_version, "0.1", 3);
-header.hblk_endian = _get_endianness();
-header.hblk_blocks = llist_size(blockchain->chain);
-
-if (header.hblk_blocks == -1)
-return (-1);
-
-file = fopen(path, "w");
-
-if (!file)
-return (-1);
-
-fwrite(&header, sizeof(header), 1, file);
-
-if (llist_for_each(blockchain->chain, write_block, file) == -1)
-{
-fclose(file);
-return (-1);
-}
-fclose(file);
-return (0);
+		if (!block)
+			return (close(file), -1);
+		if (write(file, &(block->info), sizeof(block->info))
+			!= sizeof(block->info))
+			return (close(file), -1);
+		if (write(file, &(block->data.len), 4) != 4)
+			return (close(file), -1);
+		if (write(file, block->data.buffer, block->data.len)
+			!= block->data.len)
+			return (close(file), -1);
+		if (write(file, block->hash, SHA256_DIGEST_LENGTH)
+			!= SHA256_DIGEST_LENGTH)
+			return (close(file), -1);
+	}
+	return (close(file), 0);
 }
