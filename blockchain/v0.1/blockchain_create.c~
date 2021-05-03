@@ -17,7 +17,7 @@ block_t *create_genesis_block(void)
 	*(genesis->data.buffer + 16) = '\0';
 
 	memcpy(genesis->hash, genesis_hash_value, SHA256_DIGEST_LENGTH);
-	genesis->info.timestamp = GENESIS_TIMESTAMP;
+	genesis->info.timestamp = 1537578000;
 	return (genesis);
 }
 

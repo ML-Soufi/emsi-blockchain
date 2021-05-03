@@ -1,55 +1,46 @@
 #include "blockchain.h"
 
 /**
-* create_genesis_block - creates the first block
-* Return: a genesis block
-*/
-block_t *create_genesis_block(void)
-{
-	block_t *genesis;
-
-	genesis = calloc(1, sizeof(*genesis));
-	if (!genesis)
-		return (NULL);
-
-	memcpy(genesis->data.buffer, "Holberton School", 16);
-	genesis->data.len = 16;
-	*(genesis->data.buffer + 16) = '\0';
-
-	memcpy(genesis->hash, genesis_hash_value, SHA256_DIGEST_LENGTH);
-	genesis->info.timestamp = 1537578000;
-	return (genesis);
-}
-
-/**
-* blockchain_create - creates a blockchain
-* Return: a new blockchain
+ * blockchain_create - function create a new blockchain
+ *
+ * Return: this function return the created blockchain
+ *
 */
 blockchain_t *blockchain_create(void)
 {
-	blockchain_t *blockchain;
-	block_t *genesis;
+	blockchain_t *blk_ch;
+	block_t *blk_genesis;
 
-	blockchain = malloc(sizeof(*blockchain));
-	if (!blockchain)
+	blk_ch = calloc(1, sizeof(*blk_ch));
+	if (blk_ch == NULL)
 		return (NULL);
-	genesis = create_genesis_block();
-	if (!genesis)
+	blk_genesis = calloc(1, sizeof(*blk_genesis));
+	if (blk_genesis == NULL)
 	{
-		free(blockchain);
+		free(blk_ch);
 		return (NULL);
 	}
-	blockchain->chain = llist_create(MT_SUPPORT_TRUE);
-	if (!blockchain->chain)
+	blk_ch->chain = llist_create(MT_SUPPORT_TRUE);
+	if (blk_ch->chain == NULL)
 	{
-		free(blockchain), free(genesis);
+		free(blk_ch);
+		free(blk_genesis);
 		return (NULL);
 	}
-	if (llist_add_node(blockchain->chain, genesis, ADD_NODE_FRONT) == -1)
+	blk_genesis->info.index = 0;
+	blk_genesis->info.difficulty = 0;
+	blk_genesis->info.timestamp = GNS_TIMESTAMP;
+	blk_genesis->info.nonce = 0;
+	memset(blk_genesis->info.prev_hash, 0, SHA256_DIGEST_LENGTH);
+	memcpy(&(blk_genesis->data.buffer), GNS_DATA, GNS_DATA_LEN);
+	blk_genesis->data.len = GNS_DATA_LEN;
+	memcpy(&(blk_genesis->hash), GNS_HASH, SHA256_DIGEST_LENGTH);
+	if (llist_add_node(blk_ch->chain, blk_genesis, ADD_NODE_FRONT) == -1)
 	{
-		llist_destroy(blockchain->chain, 1, NULL);
-		free(blockchain), free(genesis);
+		free(blk_genesis);
+		llist_destroy(blk_ch->chain, 0, NULL);
+		free(blk_ch);
 		return (NULL);
 	}
-	return (blockchain);
+	return (blk_ch);
 }
