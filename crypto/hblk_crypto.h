@@ -20,7 +20,7 @@
 
 #define SIG_MAX_LEN 72
 
-#define PRI_FILENAME "key.pen"
+#define PRI_FILENAME "key.pem"
 
 #define PUB_FILENAME "key_pub.pem"
 

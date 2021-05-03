@@ -18,7 +18,11 @@
 
 #define EC_PUB_LEN 65
 
-# define SIG_MAX_LEN 72
+#define SIG_MAX_LEN 72
+
+#define PRI_FILENAME "key.pen"
+
+#define PUB_FILENAME "key_pub.pem"
 
 /**
  * struct sig_s - EC Signature structure
