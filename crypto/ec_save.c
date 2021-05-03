@@ -21,7 +21,7 @@ if (mkdir(folder, 0700) == -1)
 return (0);
 }
 
-sprintf(FL, "%s/%s", folder, "key.pem");
+sprintf(FL, "%s/%s", folder, PRI_FILENAME);
 F = fopen(FL, "w");
 
 if (!F)
@@ -31,7 +31,7 @@ if (!PEM_write_ECPrivateKey(F, key, NULL, NULL, 0, NULL, NULL))
 return (0);
 
 fclose(F);
-sprintf(FL, "%s/%s", folder, "key_pub.pem");
+sprintf(FL, "%s/%s", folder, PUB_FILENAME);
 F = fopen(FL, "w");
 
 if (!F)

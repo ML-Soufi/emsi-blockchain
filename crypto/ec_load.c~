@@ -9,7 +9,7 @@ EC_KEY *ec_load(char const *folder)
 {
 EC_KEY *ec_key = NULL;
 char FL[512] = {0};
-FL *F;
+FILE *F;
 struct stat st;
 
 if (!folder)
