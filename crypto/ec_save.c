@@ -8,38 +8,31 @@
 */
 int ec_save(EC_KEY *key, char const *folder)
 {
-char FL[512] = {0};
-FILE *F;
-struct stat st = {0};
+char my_file[BUFSIZ];
+FILE *pfile;
 
 if (!key || !folder)
 return (0);
-
-if (stat(folder, &st) == -1)
+mkdir(folder, 0700);
+sprintf(my_file, "%s/%s", folder, PRI_FILENAME);
+pfile = fopen(my_file, "w");
+if (!pfile)
+return (0);
+if (!PEM_write_ECPrivateKey(pfile, key, NULL, NULL, 0, NULL, NULL))
 {
-if (mkdir(folder, 0700) == -1)
+fclose(pfile);
 return (0);
 }
-
-sprintf(FL, "%s/%s", folder, PRI_FILENAME);
-F = fopen(FL, "w");
-
-if (!F)
+fclose(pfile);
+sprintf(my_file, "%s/%s", folder, PUB_FILENAME);
+pfile = fopen(my_file, "w");
+if (!pfile)
 return (0);
-
-if (!PEM_write_ECPrivateKey(F, key, NULL, NULL, 0, NULL, NULL))
+if (!PEM_write_EC_PUBKEY(pfile, key))
+{
+fclose(pfile);
 return (0);
-
-fclose(F);
-sprintf(FL, "%s/%s", folder, PUB_FILENAME);
-F = fopen(FL, "w");
-
-if (!F)
-return (0);
-
-if (!PEM_write_EC_PUBKEY(F, key))
-return (0);
-
-fclose(F);
+}
+fclose(pfile);
 return (1);
 }

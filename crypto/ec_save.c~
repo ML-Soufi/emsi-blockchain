@@ -31,7 +31,7 @@ if (!PEM_write_ECPrivateKey(F, key, NULL, NULL, 0, NULL, NULL))
 return (0);
 
 fclose(F);
-sprintf(FL, "%s/%s", folder, "key_pub.pem");
+sprintf(FL, "%s/%s", folder, PUB_FILENAME);
 F = fopen(FL, "w");
 
 if (!F)

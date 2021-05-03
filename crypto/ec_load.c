@@ -7,35 +7,27 @@
 */
 EC_KEY *ec_load(char const *folder)
 {
-EC_KEY *ec_key = NULL;
-char FL[512] = {0};
-FILE *F;
+EC_KEY *mykey = NULL;
+char myfile[512] = {0};
+FILE *pfile;
 struct stat st;
-
 if (!folder)
 return (NULL);
-
 if (stat(folder, &st) == -1)
 return (NULL);
-
-sprintf(FL, "./%s/%s", folder, PUB_FILENAME);
-F = fopen(FL, "r");
-
-if (!F)
+sprintf(myfile, "./%s/%s", folder, PUB_FILENAME);
+pfile = fopen(myfile, "r");
+if (!pfile)
 return (NULL);
-
-if (!PEM_read_EC_PUBKEY(F, &ec_key, NULL, NULL))
+if (!PEM_read_EC_PUBKEY(pfile, &mykey, NULL, NULL))
 return (NULL);
-
-fclose(F);
-sprintf(FL, "./%s/%s", folder, PRI_FILENAME);
-F = fopen(FL, "r");
-
-if (!F)
+fclose(pfile);
+sprintf(myfile, "./%s/%s", folder, PRI_FILENAME);
+pfile = fopen(myfile, "r");
+if (!pfile)
 return (NULL);
-
-if (!PEM_read_ECPrivateKey(F, &ec_key, NULL, NULL))
-return (NULL);
-fclose(F);
-return (ec_key);
+if (!PEM_read_ECPrivateKey(pfile, &mykey, NULL, NULL))
+sreturn (NULL);
+fclose(pfile);
+return (mykey);
 }

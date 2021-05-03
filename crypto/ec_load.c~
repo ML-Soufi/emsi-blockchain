@@ -18,7 +18,7 @@ return (NULL);
 if (stat(folder, &st) == -1)
 return (NULL);
 
-sprintf(FL, "./%s/%s", folder, "key_pub.pem");
+sprintf(FL, "./%s/%s", folder, PUB_FILENAME);
 F = fopen(FL, "r");
 
 if (!F)
@@ -28,7 +28,7 @@ if (!PEM_read_EC_PUBKEY(F, &ec_key, NULL, NULL))
 return (NULL);
 
 fclose(F);
-sprintf(FL, "./%s/%s", folder, "key.pem");
+sprintf(FL, "./%s/%s", folder, PRI_FILENAME);
 F = fopen(FL, "r");
 
 if (!F)
