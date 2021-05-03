@@ -27,7 +27,7 @@ pfile = fopen(myfile, "r");
 if (!pfile)
 return (NULL);
 if (!PEM_read_ECPrivateKey(pfile, &mykey, NULL, NULL))
-sreturn (NULL);
+return (NULL);
 fclose(pfile);
 return (mykey);
 }
