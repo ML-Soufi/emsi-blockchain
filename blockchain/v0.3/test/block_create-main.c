@@ -26,7 +26,7 @@ int main(void)
     llist_add_node(blockchain->chain, block, ADD_NODE_REAR);
 
     _blockchain_print(blockchain);
-    _blockchain_destroy(blockchain);
+    blockchain_destroy(blockchain);
 
     return (EXIT_SUCCESS);
 }

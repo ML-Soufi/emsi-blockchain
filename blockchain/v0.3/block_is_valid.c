@@ -1,69 +1,87 @@
 #include "blockchain.h"
 
 /**
- * validate_tx - validates each tx
- * @node: tx
- * @idx: index of node
- * @arg: visitor
- * Return: 0 if continue else 1
- */
-int validate_tx(llist_node_t node, unsigned int idx, void *arg)
+* verify_genesis_block - a function that verifies the Genesis block
+* @block: block to be verified
+* Return: -1 if block is not valid, 0 if block is valid
+*/
+static int verify_genesis_block(block_t const *block)
 {
-	transaction_t *tx = node;
-	validation_vistor_t *visitor = arg;
+	blockchain_t *blockchain = blockchain_create();
+	int ret = 0;
 
-	if (!idx)
-	{
-		if (!coinbase_is_valid(tx, visitor->block_index))
-			visitor->valid = 0;
-	}
-	else if (!transaction_is_valid(tx, visitor->all_unspent))
-	{
-		dprintf(2, "validate_tx: invalid idx %u\n", idx);
-		visitor->valid = 0;
-	}
+	if (!blockchain)
+		return (-1);
+	ret = memcmp(block, llist_get_head(blockchain->chain), sizeof(*block)) != 0;
+	blockchain_destroy(blockchain);
+	return (ret * -1);
+}
+
+/**
+* verify_transactions - verify each transaction
+* @node: current node
+* @idx: index of @node
+* @all_unspent: list of unspent transactions
+* Return: 0 if transaction is valid, 1 otherwise
+*/
+int verify_transactions(llist_node_t node, unsigned int idx, void *all_unspent)
+{
+	if (idx == 0)
+		return (0);
+	if (!transaction_is_valid(node, all_unspent))
+		return (1);
 	return (0);
 }
 
 /**
- * block_is_valid - checks if this and previous block are valid
- * @block: pointer to this block in the chain
- * @prev_block: pointer to previous block in the chain or NULL
- * @all_unspent: list of all unspent txs
- * Return: 0 if valid else 1 if invalid
- */
-int block_is_valid(block_t const *block, block_t const *prev_block,
-	llist_t *all_unspent)
+* verify_blocks - a function that verifies that a Block is valid
+* @block: block to be verified
+* @prev_block: previous block
+* @all_unspent: unspent transactions
+* Return: -1 if block is not valid, 0 if block is valid
+*/
+static int verify_blocks(block_t const *block,
+						 block_t const *prev_block, llist_t *all_unspent)
 {
-	uint8_t hash_buf[SHA256_DIGEST_LENGTH] = {0};
-	block_t const _genesis = GENESIS_BLOCK;
-	validation_vistor_t visitor = {0};
+	uint8_t block_sha[SHA256_DIGEST_LENGTH];
+	uint8_t prev_sha[SHA256_DIGEST_LENGTH];
 
-	if (!block || (!prev_block && block->info.index != 0))
-		return (1);
-	if (block->info.index == 0)
-		return (memcmp(block, &_genesis, sizeof(_genesis)));
-	if (block->info.index != prev_block->info.index + 1)
-		return (1);
-	if (!block_hash(prev_block, hash_buf) ||
-		memcmp(hash_buf, prev_block->hash, SHA256_DIGEST_LENGTH))
-		return (1);
-	if (memcmp(prev_block->hash, block->info.prev_hash, SHA256_DIGEST_LENGTH))
-		return (1);
-	if (!block_hash(block, hash_buf) ||
-		memcmp(hash_buf, block->hash, SHA256_DIGEST_LENGTH))
-		return (1);
+	if (prev_block->info.index != block->info.index - 1)
+		return (-1);
+	if (!block_hash(prev_block, prev_sha) ||
+		memcmp(prev_block->hash, prev_sha, SHA256_DIGEST_LENGTH))
+		return (-1);
+	if (!block_hash(block, block_sha) ||
+		memcmp(block->hash, block_sha, SHA256_DIGEST_LENGTH) ||
+		memcmp(block->info.prev_hash, prev_sha, SHA256_DIGEST_LENGTH))
+		return (-1);
 	if (block->data.len > BLOCKCHAIN_DATA_MAX)
-		return (1);
-	if (!hash_matches_difficulty(block->hash, block->info.difficulty))
-		return (1);
+		return (-1);
 	if (llist_size(block->transactions) < 1)
-		return (1);
-	visitor.valid = 1;
-	visitor.all_unspent = all_unspent;
-	visitor.block_index = block->info.index;
-	if (llist_for_each(block->transactions, validate_tx, &visitor) ||
-		!visitor.valid)
-		return (1);
+		return (-1);
+	if (!coinbase_is_valid(llist_get_head(block->transactions),
+						   block->info.index))
+		return (-1);
+	if (llist_for_each(block->transactions, verify_transactions, all_unspent))
+		return (-1);
 	return (0);
+}
+
+/**
+* block_is_valid - a function that verifies that a Block is valid
+* @block: block to be verified
+* @prev_block: previous block
+* @all_unspent: unspent transactions
+* Return: -1 if block is not valid, 0 if block is valid
+*/
+int block_is_valid(block_t const *block, block_t const *prev_block,
+				   llist_t *all_unspent)
+{
+	if (!block)
+		return (-1);
+	if (hash_matches_difficulty(block->hash, block->info.difficulty) == 0)
+		return (-1);
+	if (!prev_block)
+		return (verify_genesis_block(block));
+	return (verify_blocks(block, prev_block, all_unspent));
 }

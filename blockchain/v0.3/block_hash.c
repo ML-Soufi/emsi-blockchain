@@ -1,43 +1,47 @@
 #include "blockchain.h"
 
 /**
- * hash_tx_ids - llist action func to hash outputs
- * @node: transaction_t* struct
- * @idx: index of node
- * @arg: pointer to address to write to
- * Return: 0 if success else 1
- */
-int hash_tx_ids(llist_node_t node, unsigned int idx, void *arg)
+* tx_to_buffer - copies transaction outputs into buffer
+* @tr: transaction node
+* @idx: index of @tr
+* @buffer: buffer to copy transaction
+* Return: 0 on success
+*/
+int tx_to_buffer(llist_node_t tr, unsigned int idx, void *buffer)
 {
-	memcpy(*(uint8_t **)arg, ((transaction_t *)node)->id, SHA256_DIGEST_LENGTH);
-	*(uint8_t **)arg += SHA256_DIGEST_LENGTH;
+	memcpy((int8_t *)buffer + idx * SHA256_DIGEST_LENGTH,
+		   tr, SHA256_DIGEST_LENGTH);
 	return (0);
-	(void)idx;
 }
 
 
 /**
- * block_hash - computes hash of block
- * @block: pointer to block to hash
- * @hash_buf: buffer to store hash/digest
- * Return: pointer to buffer
- */
+* block_hash - get the hash of a block
+* @block: block to be hashed, only hash field will not be hashed
+* @hash_buf: buffer for digest
+* Return: hash digest or NULL if failed
+*/
 uint8_t *block_hash(block_t const *block,
-	uint8_t hash_buf[SHA256_DIGEST_LENGTH])
+					uint8_t hash_buf[SHA256_DIGEST_LENGTH])
 {
-	size_t len0 = sizeof(block->info) + block->data.len, len;
-	int8_t *_buf, *buf;
+	size_t len;
+	int list_size;
+	int8_t *buffer;
 
-	len = len0;
-	if (llist_size(block->transactions) > 0)
-		len += llist_size(block->transactions) * SHA256_DIGEST_LENGTH;
-	buf = _buf = calloc(1, len);
-	if (!buf)
+	if (!block)
 		return (NULL);
-	memcpy(buf, &block->info, len0);
-	buf += len0;
-	llist_for_each(block->transactions, hash_tx_ids, &buf);
-	sha256(_buf, len, hash_buf);
-	free(_buf);
+	len = sizeof(block->info) + block->data.len;
+	list_size = llist_size(block->transactions);
+	if (list_size == -1)
+		list_size = 0;
+	len += (size_t)(SHA256_DIGEST_LENGTH * list_size);
+	buffer = calloc(1, len);
+	if (!buffer)
+		return (NULL);
+	memcpy(buffer, block, sizeof(block->info) + block->data.len);
+	llist_for_each(block->transactions, tx_to_buffer,
+				   buffer + sizeof(block->info) + block->data.len);
+	sha256(buffer, len, hash_buf);
+	free(buffer);
 	return (hash_buf);
 }

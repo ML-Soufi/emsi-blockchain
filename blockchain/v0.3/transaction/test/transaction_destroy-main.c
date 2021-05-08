@@ -9,15 +9,15 @@
  */
 int main(void)
 {
-	transaction_t *coinbase;
-	EC_KEY *owner;
+    transaction_t *coinbase;
+    EC_KEY *owner;
 
-	owner = ec_create();
-	coinbase = coinbase_create(owner, 1);
-	transaction_destroy(coinbase);
+    owner = ec_create();
+    coinbase = coinbase_create(owner, 1);
+    transaction_destroy(coinbase);
 
-	/* Cleanup */
-	EC_KEY_free(owner);
+    /* Cleanup */
+    EC_KEY_free(owner);
 
-	return (EXIT_SUCCESS);
+    return (EXIT_SUCCESS);
 }

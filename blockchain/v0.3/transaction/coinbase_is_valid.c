@@ -1,45 +1,35 @@
 #include "transaction.h"
 
 /**
- * is_empty - checks if buffer memory is all 0
- * @buf: the buffer to check
- * @size: size of buffer
- * Return: 1 if empty else 0
- */
-int is_empty(uint8_t *buf, size_t size)
-{
-	return (!*buf && !memcmp(buf, buf + 1, size - 1));
-}
-
-/**
- * coinbase_is_valid - validates coinbase tx
- * @coinbase: the tx to validate
- * @block_index: index of block containing tx
- * Return: 1 if valid else 0
- */
+* coinbase_is_valid - validate coinbase transaction
+* @coinbase: transaction to validate
+* @block_index: block index where @coinbase is stored
+* Return: 1 if valid, 0 if otherwise
+*/
 int coinbase_is_valid(transaction_t const *coinbase, uint32_t block_index)
 {
 	uint8_t hash[SHA256_DIGEST_LENGTH];
-	tx_in_t *txi;
-	tx_out_t *txo;
+	tx_in_t *in;
+	int i;
 
-	if (!coinbase)
+	if (!transaction_hash(coinbase, hash)
+		|| memcmp(hash, coinbase->id, SHA256_DIGEST_LENGTH))
 		return (0);
-	if (!transaction_hash(coinbase, hash) ||
-		memcmp(coinbase->id, hash, SHA256_DIGEST_LENGTH))
+	if (llist_size(coinbase->inputs) != 1 || llist_size(coinbase->outputs) != 1)
 		return (0);
-	if (llist_size(coinbase->inputs) != 1 ||
-		llist_size(coinbase->outputs) != 1)
+	in = llist_get_head(coinbase->inputs);
+	if (!in || in->sig.len
+		|| memcmp(in->tx_out_hash, &block_index, sizeof(block_index)))
 		return (0);
-	txi = llist_get_node_at(coinbase->inputs, 0);
-	txo = llist_get_node_at(coinbase->outputs, 0);
-	if (memcmp(txi->tx_out_hash, &block_index, 4))
-		return (0);
-	if (!is_empty(txi->block_hash, sizeof(txi->block_hash)) ||
-		!is_empty(txi->tx_id, sizeof(txi->tx_id)) ||
-		!is_empty((uint8_t *)&txi->sig, sizeof(txi->sig)))
-		return (0);
-	if (txo->amount != COINBASE_AMOUNT)
-		return (0);
+	for (i = 0; i < SHA256_DIGEST_LENGTH; ++i)
+	{
+		if (in->block_hash[i] || in->tx_id[i])
+			return (0);
+	}
+	for (i = 0; i < SIG_MAX_LEN; ++i)
+	{
+		if (in->sig.sig[i])
+			return (0);
+	}
 	return (1);
 }
